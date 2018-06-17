@@ -1,9 +1,14 @@
 import numpy as np
 import cv2
 import time
+import os
+import psutil
 
 def face_detect():
 
+    #Get current Process ID
+    pid = os.getpid()
+    print('PID: ' + format(pid))
     # Find OpenCV version
     (major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.')
     print('OpenCV Major version: ', major_ver)
@@ -46,8 +51,14 @@ def face_detect():
         seconds = end - start
         # Calculate frames per second
         fps  = 120 / seconds;
-        print("Estimated FPS : ", format(fps));
-        cv2.putText(img, "Estimated FPS : " + format(fps), (10,700), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
+        #print("Estimated FPS : ", format(fps));
+        cv2.putText(img, "Estimated FPS : " + format(fps), (10,650), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
+        #Get resources used by current process
+        p = psutil.Process(pid)
+        with p.oneshot():
+            cpu_percent = p.cpu_percent()
+            cv2.putText(img, "CPU: " + format(cpu_percent) + "%", (10,700), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
+
         cv2.imshow('Detected face',img)
         k = cv2.waitKey(30) & 0xff
         if (k == 27) or (k == 13):
