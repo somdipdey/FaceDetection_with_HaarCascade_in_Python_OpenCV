@@ -4,6 +4,17 @@ import time
 import os
 import psutil
 
+def rescale_frame(frame, percent=75):
+    width = int(frame.shape[1] * percent/ 100)
+    height = int(frame.shape[0] * percent/ 100)
+    dim = (width, height)
+    return cv2.resize(frame, dim, interpolation =cv2.INTER_AREA)
+
+def pos_bottom_left(frame, grid=29):
+    height = int(frame.shape[0])
+    dim = (10, int(height * (grid/30)))
+    return dim
+
 def face_detect():
 
     #Get current Process ID
@@ -27,9 +38,11 @@ def face_detect():
         #else :
         #    fps = cap.get(cv2.CAP_PROP_FPS)
         #    print('Frames per second using video.get(cv2.CAP_PROP_FPS) : ', format(fps))
+
         # Start time
         start = time.time()
-        ret, img = cap.read()
+        ret, frame = cap.read()
+        img = rescale_frame(frame, percent=50)
 
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         faces = face_cascade.detectMultiScale(gray, 1.3, 5)
@@ -50,14 +63,14 @@ def face_detect():
         # Time elapsed
         seconds = end - start
         # Calculate frames per second
-        fps  = 120 / seconds;
+        fps  = 30 / seconds;
         #print("Estimated FPS : ", format(fps));
-        cv2.putText(img, "Estimated FPS : " + format(fps), (10,650), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
+        cv2.putText(img, "Estimated FPS : " + format(fps), pos_bottom_left(img), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, 8)
         #Get resources used by current process
         p = psutil.Process(pid)
         with p.oneshot():
             cpu_percent = p.cpu_percent()
-            cv2.putText(img, "CPU: " + format(cpu_percent) + "%", (10,700), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
+            cv2.putText(img, "CPU: " + format(cpu_percent) + "%", pos_bottom_left(img, 26), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, 8)
 
         cv2.imshow('Detected face',img)
         k = cv2.waitKey(30) & 0xff
