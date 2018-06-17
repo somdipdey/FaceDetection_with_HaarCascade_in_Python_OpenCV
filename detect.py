@@ -16,7 +16,6 @@ def pos_bottom_left(frame, grid=29):
     return dim
 
 def face_detect():
-
     #Get current Process ID
     pid = os.getpid()
     print('PID: ' + format(pid))
