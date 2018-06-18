@@ -15,7 +15,7 @@ def pos_bottom_left(frame, grid=29):
     dim = (10, int(height * (grid/30)))
     return dim
 
-def face_detect():
+def face_detect(write_to_audit=False):
     # Find OpenCV version
     (major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.')
     print('OpenCV Major version: ', major_ver)
@@ -33,6 +33,7 @@ def face_detect():
         else :
             fps = cap.get(cv2.CAP_PROP_FPS)
 
+        start_time = time.time() # start time of the loop
         ret, frame = cap.read()
         img = rescale_frame(frame, percent=50)
 
@@ -50,11 +51,19 @@ def face_detect():
             if (len(faces)%3 == 2):
                 cv2.rectangle(img,(x,y),(x+w,y+h),bColor,2)
 
-        #print("Estimated FPS : ", format(fps));
-        cv2.putText(img, "Video Capture FPS : " + format(fps), pos_bottom_left(img), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, 8)
-        #Get CPU load
+        #Get CPU load and Compute FPS
+        #Calculating Compute FPS is referred from https://stackoverflow.com/questions/43761004/fps-how-to-divide-count-by-time-function-to-determine-fps
         cpu_load = ext.cpu_mac()
         mem_load = ext.mem_mac()
+        compute_fps = 1.0 / (time.time() - start_time)
+        # Write out to an audit file
+        if write_to_audit == True:
+            file = open("audit.txt", "a+")
+            file.write(format(fps) + "," + format(compute_fps) + "," + format(cpu_load) + "," + format(mem_load) + "\n")
+            file.close()
+
+        #print("Estimated FPS : ", format(fps));
+        cv2.putText(img, "V-FPS : " + format(fps) + ", C-FPS: " + format(compute_fps), pos_bottom_left(img), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, 8)
         cv2.putText(img, "CPU: " + format(cpu_load) + "%", pos_bottom_left(img, 27), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, 8)
         cv2.putText(img, "Memory: " + format(mem_load) + "%", pos_bottom_left(img, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, 8)
 
@@ -66,4 +75,14 @@ def face_detect():
     cap.release()
     cv2.destroyAllWindows()
 
-if __name__ == '__main__': face_detect()
+if __name__ == '__main__':
+    import sys
+    args = False
+    try:
+        args = sys.argv[1]
+    except IndexError:
+        args = False
+    if(args == False):
+        face_detect()
+    else:
+        face_detect(bool(args))

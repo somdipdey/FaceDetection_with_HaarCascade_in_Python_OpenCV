@@ -8,6 +8,7 @@
 This is an extension function to check CPU load of the system on Mac OS and Linux.
 Since calling a function to check CPU load varies from OS to OS, hence, different
 functions needs to be written for different OSs.
+The MAC OS CPU/Mem consumption is referred from https://stackoverflow.com/questions/8736713/retrieve-system-information-on-macos-x
 </summary>*/
 
 /* Program to get CPU usage*/
