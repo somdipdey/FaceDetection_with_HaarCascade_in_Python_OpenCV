@@ -40,16 +40,53 @@ float CalculateCPULoad(unsigned long long idleTicks, unsigned long long totalTic
   _previousIdleTicks  = idleTicks;
   return ret;
 }
+
+/* Mac OS wide memory usage -->*/
+static double ParseMemValue(const char * b)
+{
+   while((*b)&&(isdigit(*b) == 0)) b++;
+   return isdigit(*b) ? atof(b) : -1.0;
+}
+
+// Returns a number between 0.0f and 1.0f, with 0.0f meaning all RAM is available, and 1.0f meaning all RAM is currently in use
+float GetSystemMemoryUsagePercentage()
+{
+   FILE * fpIn = popen("/usr/bin/vm_stat", "r");
+   if (fpIn)
+   {
+      double pagesUsed = 0.0, totalPages = 0.0;
+      char buf[512];
+      while(fgets(buf, sizeof(buf), fpIn) != NULL)
+      {
+         if (strncmp(buf, "Pages", 5) == 0)
+         {
+            double val = ParseMemValue(buf);
+            if (val >= 0.0)
+            {
+               if ((strncmp(buf, "Pages wired", 11) == 0)||(strncmp(buf, "Pages active", 12) == 0)) pagesUsed += val;
+               totalPages += val;
+            }
+         }
+         else if (strncmp(buf, "Mach Virtual Memory Statistics", 30) != 0) break;  // Stop at "Translation Faults", we don't care about anything at or below that
+      }
+      pclose(fpIn);
+
+      if (totalPages > 0.0) return (float) (pagesUsed/totalPages);
+   }
+   return -1.0f;  // indicate failure
+}
+
 /* < -- program ends here*/
 
 
 //Define a new exception object for our module
 static PyObject *extError;
 
+//CPU usgae in MAC OS
 static PyObject* ext_cpu_mac(PyObject* self, PyObject *args)
 {
   //int pid;//commented pid because it's not required now
-  float sts=0;
+  float ret=0;
 
   /*Commented the following argument fetching -->*/
   //We expect at least 1 argument to this function
@@ -59,18 +96,42 @@ static PyObject* ext_cpu_mac(PyObject* self, PyObject *args)
   //}
   /*<--commenting ends here*/
 
-  float cpu_load = GetCPULoad();
+  float cpu_load = GetCPULoad() * 100;
 
   printf("CPU load is %f \n", cpu_load);
 
-  sts=cpu_load;
+  ret=cpu_load;
 
-  return Py_BuildValue("f", sts);
+  return Py_BuildValue("f", ret);
+}
+
+//Memory read on MAC OS
+static PyObject* ext_mem_mac(PyObject* self, PyObject *args)
+{
+  //int pid;//commented pid because it's not required now
+  float ret=0;
+
+  /*Commented the following argument fetching -->*/
+  //We expect at least 1 argument to this function
+  //if(!PyArg_ParseTuple(args, "i", &pid))
+  //{
+  //  return NULL;
+  //}
+  /*<--commenting ends here*/
+
+  float mem_load = GetSystemMemoryUsagePercentage() * 100;
+
+  printf("Memory load is %f \n", mem_load);
+
+  ret=mem_load;
+
+  return Py_BuildValue("f", ret);
 }
 
 static PyMethodDef ext_methods[] = {
   //PythonName, C-FunctionName, argument_presentation, description
   {"cpu_mac", ext_cpu_mac, METH_VARARGS, "Print cpu load on MAC OS"},
+  {"mem_mac", ext_mem_mac, METH_VARARGS, "Print memory load on MAC OS"},
   {NULL, NULL, 0, NULL}
 };
 

@@ -51,10 +51,12 @@ def face_detect():
                 cv2.rectangle(img,(x,y),(x+w,y+h),bColor,2)
 
         #print("Estimated FPS : ", format(fps));
-        cv2.putText(img, "Estimated FPS : " + format(fps), pos_bottom_left(img), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, 8)
+        cv2.putText(img, "Video Capture FPS : " + format(fps), pos_bottom_left(img), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, 8)
         #Get CPU load
         cpu_load = ext.cpu_mac()
-        cv2.putText(img, "CPU: " + format(cpu_load) + "%", pos_bottom_left(img, 26), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, 8)
+        mem_load = ext.mem_mac()
+        cv2.putText(img, "CPU: " + format(cpu_load) + "%", pos_bottom_left(img, 27), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, 8)
+        cv2.putText(img, "Memory: " + format(mem_load) + "%", pos_bottom_left(img, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, 8)
 
         cv2.imshow('Detected face',img)
         k = cv2.waitKey(30) & 0xff
