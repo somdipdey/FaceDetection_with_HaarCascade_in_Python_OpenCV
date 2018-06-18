@@ -28,7 +28,6 @@ For other dependencies based on a particular OS please refer to that OS's instal
 
 ### Step 1:
   	$ git clone https://github.com/somdipdey/FaceDetection_with_HaarCascade_in_Python_OpenCV.git
-  	$ cd FaceDetection_with_HaarCascade_in_Python_OpenCV
   	$ [sudo] python setup.py build
     $ [sudo] python setup.py install
 
