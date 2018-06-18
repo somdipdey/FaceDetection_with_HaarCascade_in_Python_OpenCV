@@ -5,7 +5,7 @@ This program detects faces from a video input (webcam) and then shows the video 
 Use this package to encrypt messages and embed in QR code, and decode the message back.
 
 #### Build for Linux and OSX:
-[![Build Status](https://travis-ci.org/somdipdey/Encrypted_QR_Code.svg?branch=master)](https://travis-ci.org/somdipdey/Encrypted_QR_Code)
+[![Build Status](https://travis-ci.org/somdipdey/FaceDetection_with_HaarCascade_in_Python_OpenCV.svg?branch=master)](https://travis-ci.org/somdipdey/FaceDetection_with_HaarCascade_in_Python_OpenCV)
 [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](https://github.com/somdipdey/FaceDetection_with_HaarCascade_in_Python_OpenCV/blob/master/LICENSE)
 
 ## Dependencies For MAC OS
@@ -56,4 +56,4 @@ Here, FPS is the Frames Per Second of the Video Capture Input (webcam), whereas 
 
 ## Result/Output
 
-<img width="350" alt="Face Detection Using OpenCV and Resource Monitoring" src="https://user-images.githubusercontent.com/8515608/41542192-4a3686c6-730c-11e8-9895-2f56a91d8af2.png">
+<img width="450" alt="Face Detection Using OpenCV and Resource Monitoring" src="https://user-images.githubusercontent.com/8515608/41542192-4a3686c6-730c-11e8-9895-2f56a91d8af2.png">
