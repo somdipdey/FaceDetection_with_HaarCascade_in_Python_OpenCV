@@ -12,13 +12,13 @@ Use this package to encrypt messages and embed in QR code, and decode the messag
 
 	$ [sudo] pip install opencv-python
   $ [sudo] pip install matplotlib
-	$ [sudo] pip install numpy
+  $ [sudo] pip install numpy
 
 ## Dependencies For Ubuntu, Debian
 
 	$ [sudo] apt-get install libopencv-dev python-opencv
   $ [sudo] apt-get install python3-matplotlib
-	$ [sudo] apt-get install python-numpy
+  $ [sudo] apt-get install python-numpy
 
 #### Note:
 
