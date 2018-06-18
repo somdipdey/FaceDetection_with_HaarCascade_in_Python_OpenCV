@@ -1,115 +1,44 @@
 #include <Python.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
+#include <mach/mach_init.h>
+#include <mach/mach_error.h>
+#include <mach/mach_host.h>
+#include <mach/vm_map.h>
+
+/*<summary>
+This is an extension function to check CPU load of the system on Mac OS and Linux.
+Since calling a function to check CPU load varies from OS to OS, hence, different
+functions needs to be written for different OSs.
+</summary>*/
 
 /* Program to get CPU usage*/
+static unsigned long long _previousTotalTicks = 0;
+static unsigned long long _previousIdleTicks = 0;
 
-struct pstat {
-    long unsigned int utime_ticks;
-    long int cutime_ticks;
-    long unsigned int stime_ticks;
-    long int cstime_ticks;
-    long unsigned int vsize; // virtual memory size in bytes
-    long unsigned int rss; //Resident  Set  Size in bytes
-
-    long unsigned int cpu_total_time;
-};
-
-/*
- * read /proc data into the passed struct pstat
- * returns 0 on success, -1 on error
-*/
-int get_usage(const pid_t pid, struct pstat* result) {
-    char stat_filepath[80] ;
-    int ii;
-        // use snprintf() , not str[n]cat() to compose strings
-    ii = snprintf(stat_filepath, sizeof stat_filepath, "/proc/%d/stat", pid );
-    if (ii >= (int)sizeof(stat_filepath)) return -1;
-
-    FILE *fpstat = fopen(stat_filepath, "r");
-    if (fpstat == NULL) {
-        perror("FOPEN ERROR "); // <<-- should be printed by caller
-        return -1;
-    }
-
-    FILE *fstat = fopen("/proc/stat", "r");
-    if (fstat == NULL) {
-        perror("FOPEN ERROR "); // <<-- could be printed by caller
-        fclose(fstat);
-        return -1;
-    }
-
-    //read values from /proc/pid/stat
-    memset(result, 0 , sizeof *result ); // bzero is a BSD-ism
-    long int rss;
-    if (fscanf(fpstat, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu"
-                "%lu %ld %ld %*d %*d %*d %*d %*u %lu %ld",
-                &result->utime_ticks, &result->stime_ticks,
-                &result->cutime_ticks, &result->cstime_ticks, &result->vsize,
-                &rss) == EOF) {
-        fclose(fpstat);
-        return -1;
-    }
-    fclose(fpstat);
-    result->rss = rss * getpagesize();
-
-    //read+calc cpu total time from /proc/stat
-    long unsigned int cpu_time[10];
-    memset(cpu_time,0, sizeof cpu_time);
-    if (fscanf(fstat, "%*s %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu",
-                &cpu_time[0], &cpu_time[1], &cpu_time[2], &cpu_time[3],
-                &cpu_time[4], &cpu_time[5], &cpu_time[6], &cpu_time[7],
-                &cpu_time[8], &cpu_time[9]) == EOF) {
-        fclose(fstat);
-        return -1;
-    }
-
-    fclose(fstat);
-
-    for(ii=0; ii < 10;ii++)
-        result->cpu_total_time += cpu_time[ii];
-
-    return 0;
+// Returns 1.0f for "CPU fully pinned", 0.0f for "CPU idle", or somewhere in between
+// You'll need to call this at regular intervals, since it measures the load between
+// the previous call and the current one.
+float CalculateCPULoad(unsigned long long idleTicks, unsigned long long totalTicks);
+float GetCPULoad()
+{
+   host_cpu_load_info_data_t cpuinfo;
+   mach_msg_type_number_t count = HOST_CPU_LOAD_INFO_COUNT;
+   if (host_statistics(mach_host_self(), HOST_CPU_LOAD_INFO, (host_info_t)&cpuinfo, &count) == KERN_SUCCESS)
+   {
+      unsigned long long totalTicks = 0;
+      for(int i=0; i<CPU_STATE_MAX; i++) totalTicks += cpuinfo.cpu_ticks[i];
+      return CalculateCPULoad(cpuinfo.cpu_ticks[CPU_STATE_IDLE], totalTicks);
+   }
+   else return -1.0f;
 }
 
-
-
-/*
-* calculates the elapsed CPU usage between 2 measuring points. in percent
-*/
-void calc_cpu_usage_pct(const struct pstat* cur_usage,
-                        const struct pstat* last_usage,
-                        double* ucpu_usage, double* scpu_usage)
+float CalculateCPULoad(unsigned long long idleTicks, unsigned long long totalTicks)
 {
-    const long unsigned int total_time_diff = cur_usage->cpu_total_time -
-                                              last_usage->cpu_total_time;
-
-    *ucpu_usage = 100 * (((cur_usage->utime_ticks + cur_usage->cutime_ticks)
-                    - (last_usage->utime_ticks + last_usage->cutime_ticks))
-                    / (double) total_time_diff);
-
-    *scpu_usage = 100 * ((((cur_usage->stime_ticks + cur_usage->cstime_ticks)
-                    - (last_usage->stime_ticks + last_usage->cstime_ticks))) /
-                    (double) total_time_diff);
-}
-
-/*
-* calculates the elapsed CPU usage between 2 measuring points in ticks
-*/
-void calc_cpu_usage(const struct pstat* cur_usage,
-                    const struct pstat* last_usage,
-                    long unsigned int* ucpu_usage,
-                    long unsigned int* scpu_usage)
-{
-
-    *ucpu_usage = (cur_usage->utime_ticks + cur_usage->cutime_ticks) -
-                  (last_usage->utime_ticks + last_usage->cutime_ticks);
-
-    *scpu_usage = (cur_usage->stime_ticks + cur_usage->cstime_ticks) -
-                  (last_usage->stime_ticks + last_usage->cstime_ticks);
+  unsigned long long totalTicksSinceLastTime = totalTicks-_previousTotalTicks;
+  unsigned long long idleTicksSinceLastTime  = idleTicks-_previousIdleTicks;
+  float ret = 1.0f-((totalTicksSinceLastTime > 0) ? ((float)idleTicksSinceLastTime)/totalTicksSinceLastTime : 0);
+  _previousTotalTicks = totalTicks;
+  _previousIdleTicks  = idleTicks;
+  return ret;
 }
 /* < -- program ends here*/
 
@@ -117,31 +46,31 @@ void calc_cpu_usage(const struct pstat* cur_usage,
 //Define a new exception object for our module
 static PyObject *extError;
 
-static PyObject* ext_cpu(PyObject* self, PyObject *args)
+static PyObject* ext_cpu_mac(PyObject* self, PyObject *args)
 {
-  int pid;
-  int sts=0;
+  //int pid;//commented pid because it's not required now
+  float sts=0;
 
+  /*Commented the following argument fetching -->*/
   //We expect at least 1 argument to this function
-  if(!PyArg_ParseTuple(args, "i", &pid))
-  {
-    return NULL;
-  }
+  //if(!PyArg_ParseTuple(args, "i", &pid))
+  //{
+  //  return NULL;
+  //}
+  /*<--commenting ends here*/
 
-  struct pstat result;
-  double cpu = 0.0;
-  int success = get_usage(pid, &result);
-  cpu = result.cpu_total_time;
-  printf("CPU usage of %i %f \n", pid, cpu);
+  float cpu_load = GetCPULoad();
 
-  sts=cpu;
+  printf("CPU load is %f \n", cpu_load);
 
-  return Py_BuildValue("i", sts);
+  sts=cpu_load;
+
+  return Py_BuildValue("f", sts);
 }
 
 static PyMethodDef ext_methods[] = {
   //PythonName, C-FunctionName, argument_presentation, description
-  {"cpu", ext_cpu, METH_VARARGS, "Print cpu consumption of a particular process with pid"},
+  {"cpu_mac", ext_cpu_mac, METH_VARARGS, "Print cpu load on MAC OS"},
   {NULL, NULL, 0, NULL}
 };
 

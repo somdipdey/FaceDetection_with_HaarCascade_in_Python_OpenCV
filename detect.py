@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 import time
 import os
-import psutil
+import ext
 
 def rescale_frame(frame, percent=75):
     width = int(frame.shape[1] * percent/ 100)
@@ -16,9 +16,6 @@ def pos_bottom_left(frame, grid=29):
     return dim
 
 def face_detect():
-    #Get current Process ID
-    pid = os.getpid()
-    print('PID: ' + format(pid))
     # Find OpenCV version
     (major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.')
     print('OpenCV Major version: ', major_ver)
@@ -65,11 +62,9 @@ def face_detect():
         fps  = 30 / seconds;
         #print("Estimated FPS : ", format(fps));
         cv2.putText(img, "Estimated FPS : " + format(fps), pos_bottom_left(img), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, 8)
-        #Get resources used by current process
-        p = psutil.Process(pid)
-        with p.oneshot():
-            cpu_percent = p.cpu_percent()
-            cv2.putText(img, "CPU: " + format(cpu_percent) + "%", pos_bottom_left(img, 26), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, 8)
+        #Get CPU load
+        cpu_load = ext.cpu_mac
+        cv2.putText(img, "CPU: " + format(cpu_load) + "%", pos_bottom_left(img, 26), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, 8)
 
         cv2.imshow('Detected face',img)
         k = cv2.waitKey(30) & 0xff
