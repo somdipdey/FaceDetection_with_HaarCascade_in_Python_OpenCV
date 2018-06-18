@@ -6,7 +6,7 @@ Use this package to encrypt messages and embed in QR code, and decode the messag
 
 #### Build for Linux and OSX:
 [![Build Status](https://travis-ci.org/somdipdey/Encrypted_QR_Code.svg?branch=master)](https://travis-ci.org/somdipdey/Encrypted_QR_Code)
-[![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](https://github.com/somdipdey/Encrypted_QR_Code/blob/master/LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](https://github.com/somdipdey/FaceDetection_with_HaarCascade_in_Python_OpenCV/blob/master/LICENSE)
 
 ## Dependencies For MAC OS
 
