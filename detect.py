@@ -28,15 +28,11 @@ def face_detect():
 
     while 1:
         # fps calculation from https://www.learnopencv.com/how-to-find-frame-rate-or-frames-per-second-fps-in-opencv-python-cpp/
-        #if int(major_ver)  < 3 :
-        #    fps = cap.get(cv2.cv.CV_CAP_PROP_FPS)
-        #    print('Frames per second using video.get(cv2.cv.CV_CAP_PROP_FPS): ', format(fps))
-        #else :
-        #    fps = cap.get(cv2.CAP_PROP_FPS)
-        #    print('Frames per second using video.get(cv2.CAP_PROP_FPS) : ', format(fps))
+        if int(major_ver)  < 3 :
+            fps = cap.get(cv2.cv.CV_CAP_PROP_FPS)
+        else :
+            fps = cap.get(cv2.CAP_PROP_FPS)
 
-        # Start time
-        start = time.time()
         ret, frame = cap.read()
         img = rescale_frame(frame, percent=50)
 
@@ -54,16 +50,10 @@ def face_detect():
             if (len(faces)%3 == 2):
                 cv2.rectangle(img,(x,y),(x+w,y+h),bColor,2)
 
-        # End time
-        end = time.time()
-        # Time elapsed
-        seconds = end - start
-        # Calculate frames per second
-        fps  = 30 / seconds;
         #print("Estimated FPS : ", format(fps));
         cv2.putText(img, "Estimated FPS : " + format(fps), pos_bottom_left(img), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, 8)
         #Get CPU load
-        cpu_load = ext.cpu_mac
+        cpu_load = ext.cpu_mac()
         cv2.putText(img, "CPU: " + format(cpu_load) + "%", pos_bottom_left(img, 26), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, 8)
 
         cv2.imshow('Detected face',img)
