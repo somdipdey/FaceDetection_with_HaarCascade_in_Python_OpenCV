@@ -26,12 +26,12 @@ For other dependencies based on a particular OS please refer to that OS's instal
 
 ## Installation For MAC OS, Ubuntu, Debian
 
-### Step 1:
+### Steps:
   	$ git clone https://github.com/somdipdey/FaceDetection_with_HaarCascade_in_Python_OpenCV.git
   	$ [sudo] python setup.py build
     $ [sudo] python setup.py install
 
-### Alternate Step To Install This Program
+### Alternate Steps To Install This Program
     $ pip install git+https://github.com/somdipdey/FaceDetection_with_HaarCascade_in_Python_OpenCV.git
     $ [sudo] python setup.py build
     $ [sudo] python setup.py install
